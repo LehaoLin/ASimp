@@ -1,0 +1,324 @@
+{% load static %}
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@next"></script>
+    <!-- import CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/element-plus/dist/index.css"
+    />
+    <!-- import JavaScript -->
+    <script src="https://unpkg.com/element-plus"></script>
+    <script
+      type="module"
+      src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
+    ></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+    <title>Display</title>
+    <style>
+      #app {
+        font-family: Avenir, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-align: center;
+        color: #2c3e50;
+      }
+
+      nav {
+        padding: 30px;
+
+        a {
+          font-weight: bold;
+          color: #2c3e50;
+
+          &.router-link-exact-active {
+            color: #42b983;
+          }
+        }
+      }
+
+      .select-button {
+        width: 15vw;
+      }
+
+      .home {
+        display: grid;
+        position: relative;
+        grid-template-columns: 50% 50%;
+        grid-template-areas: "content demo";
+      }
+
+      .right {
+        position: sticky;
+        top: 0;
+        height: 80vh;
+        flex: 1;
+        display: flex;
+        justify-content: center;
+      }
+      model-viewer {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div
+        v-loading="loading"
+        element-loading-text="Loading..."
+        :element-loading-spinner="svg"
+        element-loading-svg-view-box="-10, -10, 50, 50"
+        element-loading-background="rgba(122, 122, 122, 1)"
+      >
+        <el-button @click="fresh"> Fresh </el-button>
+        <div class="home">
+          <div class="left">
+            <model-viewer
+              @mousedown="view1_op"
+              ref="viewer1"
+              :src="model_left"
+              shadow-intensity="1"
+              data-js-focus-visible
+              camera-controls
+              disable-pan
+              disable-tap
+              disable-zoom
+              interaction-prompt="none"
+              max-camera-orbit="Infinity 90deg auto"
+              min-camera-orbit="Infinity 90deg auto"
+              touch-action="none"
+              interpolation-decay="1"
+            ></model-viewer>
+          </div>
+          <div class="right">
+            <model-viewer
+              @mousedown="view2_op"
+              ref="viewer2"
+              :src="model_right"
+              shadow-intensity="1"
+              data-js-focus-visible
+              camera-controls
+              disable-pan
+              disable-tap
+              disable-zoom
+              interaction-prompt="none"
+              max-camera-orbit="Infinity 90deg auto"
+              min-camera-orbit="Infinity 90deg auto"
+              touch-action="none"
+              interpolation-decay="1"
+            ></model-viewer>
+          </div>
+        </div>
+
+        <div class="choice">
+          <el-row>
+            <el-col :span="3"></el-col>
+            <el-col :span="6">
+              <el-button
+                @click="choose_left"
+                class="select-button"
+                type="primary"
+                size="large"
+                round
+                >Left is better</el-button
+              >
+            </el-col>
+            <el-col :span="6">
+              <el-button
+                @click="choose_no"
+                class="select-button"
+                type="primary"
+                size="large"
+                round
+                >No idea</el-button
+              >
+            </el-col>
+            <el-col :span="6">
+              <el-button
+                @click="choose_right"
+                class="select-button"
+                type="primary"
+                size="large"
+                round
+                >Right is better</el-button
+              >
+            </el-col>
+            <el-col :span="3"></el-col>
+          </el-row>
+        </div>
+      </div>
+    </div>
+    <script>
+      const App = {
+        compilerOptions: {
+          delimiters: ["[[", "]]"]
+        },
+        data() {
+          return {
+            message: "Hello Element Plus",
+            //model_1: 'https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb',
+            //model_2: 'https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb',
+            model_1: '',
+            model_2: '',
+            model_1_index: null,
+            model_2_index: null,
+            model_left: '',
+            model_right: '',
+            model_dict: {{model_dict|safe}},
+            loading: false,
+            topic: '{{topic}}',
+            prefer: '',
+          };
+        },
+        mounted(){
+          ;(async() => {
+            await this.fresh()
+
+            await this.sleep(1000)
+            this.check_loaded()
+            //this.loading = false
+          })();
+        },
+        methods: {
+          async check_loaded(){
+              while (true){
+                if (this.$refs.viewer1.modelIsVisible && this.$refs.viewer2.modelIsVisible){
+                  await this.sleep(1500)
+                  this.loading = false
+                  break
+                } else {
+                  await this.sleep(1000)
+                }
+              }
+          },
+          sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+          },
+          async best_conv(){
+            this.loading = true
+            this.model_1_index = this.getRndInteger(0, this.model_dict[this.topic].length)
+            this.model_2_index = this.model_dict[this.topic].length - 1
+            this.model_1 = `/static/glb/${this.model_dict[this.topic][this.model_1_index]}`
+            this.model_2 = `/static/glb/${this.model_dict[this.topic][this.model_2_index]}`
+            if (this.getRndInteger(0, 2) == 0){
+              this.model_left = this.model_1
+              this.model_right = this.model_2
+            } else {
+              this.model_left = this.model_2
+              this.model_right = this.model_1
+            }
+            await this.sleep(1000)
+            this.check_loaded()
+          },
+          async fresh(){
+            this.loading = true
+            this.model_1_index = this.getRndInteger(0, this.model_dict[this.topic].length)
+            this.model_2_index = this.getRndInteger(0, this.model_dict[this.topic].length)
+            this.model_1 = `/static/glb/${this.model_dict[this.topic][this.model_1_index]}`
+            this.model_2 = `/static/glb/${this.model_dict[this.topic][this.model_2_index]}`
+            if (this.getRndInteger(0, 2) == 0){
+              this.model_left = this.model_1
+              this.model_right = this.model_2
+            } else {
+              this.model_left = this.model_2
+              this.model_right = this.model_1
+            }
+            await this.sleep(1000)
+            this.check_loaded()
+          },
+          getRndInteger(min, max) {
+            return Math.floor(Math.random() * (max - min) ) + min;
+          },
+          choose_left(){
+            console.log('left')
+            this.prefer = this.model_left
+            if (this.model_1_index < this.model_2_index){
+              this.$message({message:'False'})
+            } else{
+              this.$message({message: 'True'})
+            }
+          },
+          choose_right(){
+              console.log('right')
+              this.prefer = this.model_right
+              if (this.model_1_index > this.model_2_index){
+                this.$message({message:'False'})
+              } else{
+                this.$message({message: 'True'})
+              }
+          },
+          choose_no(){
+              console.log('no')
+          },
+          view1_op(){
+              this.$refs.viewer1.addEventListener('camera-change', this.view1toview2, true);
+          },
+          view2_op(){
+              this.$refs.viewer2.addEventListener('camera-change', this.view2toview1, true)
+          },
+          view1toview2(){
+              try {
+                  this.$refs.viewer2.removeEventListener('camera-change', this.view2toview1, true);
+              } catch (err){
+                  console.log(err)
+              }
+              // console.log(111)
+              // console.log(this.$refs.viewer1.getCameraOrbit().toString())
+              this.$refs.viewer2.cameraOrbit = this.$refs.viewer1.getCameraOrbit().toString()
+          },
+          view2toview1(){
+              try {
+                  this.$refs.viewer1.removeEventListener('camera-change', this.view1toview2, true)
+              } catch (err){
+                  console.log(err)
+              }
+              // console.log(222)
+              // console.log(this.$refs.viewer2.getCameraOrbit().toString())
+              this.$refs.viewer1.cameraOrbit = this.$refs.viewer2.getCameraOrbit().toString()
+          },
+          post(topic, model_left, model_right, prefer){
+            var that = this
+            $.ajaxSetup({
+              data: { csrfmiddlewaretoken: '{{ csrf_token }}' },
+            });
+            $.ajax({
+              url: '',
+              type: 'post',
+              async: true,
+              traditional: true,
+              dataType: 'json',
+              data: {
+                topic: {{topic}},
+                model_left: this.model_left,
+                model_right: this.model_right,
+                prefer: this.prefer,
+                //mode: mode,
+                action: 'submit',
+              },
+              success: function (data) {
+                  console.log(data)
+                  if (data.msg == 'ok'){
+                    // next
+                  }
+              },
+              error: function(err) {
+                  console.log('failed', err)
+                  that.$message({
+                    message: 'Something went wrong',
+                    type: 'error'
+                  })
+                }
+            })
+          },
+        }
+      };
+      const app = Vue.createApp(App);
+      app.use(ElementPlus);
+      app.mount("#app");
+    </script>
+  </body>
+</html>

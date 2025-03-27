@@ -29,3 +29,9 @@ The total size of the 3D models is too big, so that we only keep 3D model's name
 - Make sure `ae-model/model.pth` and `mlp-model/model.pth` are ready
 - Put original 3D models into `input/`
 - `python pipeline.py` and find the ASimp output inside `output/`
+
+### How to test the experiment system
+
+- `frontend` is the frontend directory, using `pnpm i; pnpm dev` to run the test, or `pnpm i; pnpm build` to build the frontend file.
+- `backend` is the backend direcotyr, using `node index.js` to run it. Please notice the running port.
+- Because the size of all ratio version models is very big, we can't add it into this repo, you can find it via `https://drive.google.com/drive/folders/1SFntMCPCaKN7TMF1-qfhxlxc-zSIuBjf?usp=sharing`. And move the `3dmodels` directory under `experiment_system/backend`
