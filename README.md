@@ -13,7 +13,7 @@ The total size of the 3D models is too big, so that we only keep 3D model's name
 
 ### How to run
 
-- Make sure the environment: python 3.9, blender 3.6.10 and other packages used
+- Make sure the environment: python 3.9, blender 3.6.10, pytorch, pytorch3d, bpy and other packages used
 - To download the pretrained models from `https://drive.google.com/drive/folders/1SFntMCPCaKN7TMF1-qfhxlxc-zSIuBjf?usp=sharing` under the root directory
 - Put raw 3D models into `input/`
 - `python pipeline.py`
